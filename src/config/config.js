@@ -1,5 +1,9 @@
-require("dotenv").config();
 
-module.exports = {
-    dbUri: process.env.DB_URI
-}
+ import dotenv from "dotenv";
+ dotenv.config();
+
+ const dbUri = process.env.DB_URI;
+
+export default {
+    dbUri
+};
