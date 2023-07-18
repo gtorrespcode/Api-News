@@ -2,6 +2,9 @@ import {
   createService,
   findAllService,
   countNews,
+  topNewsService,
+  findByIdService,
+  searchByTitleService
 } from "../services/news.service.js";
 
 const create = async (req, res) => {
@@ -77,7 +80,80 @@ const findAll = async (req, res) => {
 };
 
 const topNews = async (req, res) => {
+  try {
+    const news = await topNewsService();
 
-}
+    if (!news) {
+      return res.status(400).send({ message: "There is no registred post" });
+    }
+    res.send({
+      news: {
+        id: news._id,
+        title: news.title,
+        text: news.text,
+        banner: news.banner,
+        comments: news.comments,
+        name: news.user.name,
+        username: news.user.username,
+        userAvatar: news.user.avatar,
+      },
+    });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
 
-export { create, findAll, topNews };
+const findById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const news = await findByIdService(id);
+
+    res.send({
+      news: {
+        id: news._id,
+        title: news.title,
+        text: news.text,
+        banner: news.banner,
+        comments: news.comments,
+        name: news.user.name,
+        username: news.user.username,
+        userAvatar: news.user.avatar,
+      },
+    });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+const searchByTitle = async (req, res) => {
+  try {
+    const {title} = req.query;
+    console.log(title);
+    const news = await searchByTitleService(title);
+
+    if (news.length === 0 ){
+      return res.status(400).send({
+        message: "There are no posts for this title"
+      })
+    }
+
+    return res.send({
+      results: news.map((item) => ({
+        id: item._id,
+        title: item.title,
+        text: item.text,
+        banner: item.banner,
+        comments: item.comments,
+        name: item.user.name,
+        username: item.user.username,
+        userAvatar: item.user.avatar,
+      }))
+    })
+
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+export { create, findAll, topNews, findById, searchByTitle };
