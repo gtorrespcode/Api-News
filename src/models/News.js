@@ -5,7 +5,7 @@ const NewsSchema = new mongoose.Schema({
   text: {type: String, required: true},
   banner: {type: String, required: true},
   createdAt: {type: Date, default: Date.now()},
-  user: {type: mongoose.Schema.Types.ObjectId, required: true},
+  user: {type: mongoose.Schema.Types.ObjectId, required: true, ref: "User"},
   likes: {type: Array, required: true},
   comments: {type: Array, required: true},
 });

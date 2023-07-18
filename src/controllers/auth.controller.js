@@ -25,7 +25,7 @@ import { loginService, generateToken } from "../services/auth.service.js";
     const token = generateToken(user.id)
 
 
-    res.send(user);
+    res.send(token);
     console.log(user.id);
     console.log(token);
 
