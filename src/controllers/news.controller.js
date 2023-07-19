@@ -4,7 +4,9 @@ import {
   countNews,
   topNewsService,
   findByIdService,
-  searchByTitleService
+  searchByTitleService,
+  byUserService,
+  updateService
 } from "../services/news.service.js";
 
 const create = async (req, res) => {
@@ -129,8 +131,8 @@ const findById = async (req, res) => {
 const searchByTitle = async (req, res) => {
   try {
     const {title} = req.query;
-    console.log(title);
     const news = await searchByTitleService(title);
+    
 
     if (news.length === 0 ){
       return res.status(400).send({
@@ -156,4 +158,68 @@ const searchByTitle = async (req, res) => {
   }
 };
 
-export { create, findAll, topNews, findById, searchByTitle };
+const byUser = async (req, res) => {
+  try {
+    const id = req.userId;
+    const news = await byUserService(id);
+
+    return res.send({
+      results: news.map((item) => ({
+        id: item._id,
+        title: item.title,
+        text: item.text,
+        banner: item.banner,
+        comments: item.comments,
+        name: item.user.name,
+        username: item.user.username,
+        userAvatar: item.user.avatar,
+      }))
+
+    })
+
+  } catch (err) {
+  res.status(500).send(err.message);
+}
+}
+
+const update = async (req, res) => {
+  try {
+      const { title, text , banner} = req.body;
+      const { id } = req.params;
+
+      if (!title && !text && !banner){
+        return res.status(400).send({message: "Submit a field"});
+      }
+
+      const news = await findByIdService(id);
+
+      if(news.user._id != req.userId){
+        return res.status(400).send({message: "You cant update"});
+
+      }
+
+      await updateService(id, title, text, banner);
+      return res.send({message: "Updated"});
+
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+}
+
+const erase = async (req, res) => {
+try {
+  const { id } = req.params
+  const news = await findByIdService(id);
+
+  if (String(news.user._id) !== req.userId){
+    return res.send({message: "You cant delete"})
+  }
+
+  await eraseService(id);
+  return res.send({message: "Deleted"})
+} catch (err) {
+  res.status(500).send(err.message);
+}
+}
+
+export { create, findAll, topNews, findById, searchByTitle, byUser, update, erase };
