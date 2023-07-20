@@ -50,6 +50,10 @@ const likeNewsService = (idNews, userId) =>
       );
   }
     
+  const deleteCommentService = (idNews, idComment, userId) => 
+    News.findOneAndUpdate({_id: idNews},
+       {$pull: {comments: {idComment, userId}}}
+       );
 
 export {
   createService,
@@ -63,5 +67,6 @@ export {
   eraseService,
   likeNewsService,
   deleteLikeNewsService,
-  addCommentService
+  addCommentService,
+  deleteCommentService
 };

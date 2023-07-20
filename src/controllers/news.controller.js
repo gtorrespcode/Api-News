@@ -10,7 +10,8 @@ import {
   eraseService,
   likeNewsService,
   deleteLikeNewsService,
-  addCommentService
+  addCommentService,
+  deleteCommentService,
 } from "../services/news.service.js";
 
 const create = async (req, res) => {
@@ -135,14 +136,13 @@ const findById = async (req, res) => {
 
 const searchByTitle = async (req, res) => {
   try {
-    const {title} = req.query;
+    const { title } = req.query;
     const news = await searchByTitleService(title);
-    
 
-    if (news.length === 0 ){
+    if (news.length === 0) {
       return res.status(400).send({
-        message: "There are no posts for this title"
-      })
+        message: "There are no posts for this title",
+      });
     }
 
     return res.send({
@@ -155,9 +155,8 @@ const searchByTitle = async (req, res) => {
         name: item.user.name,
         username: item.user.username,
         userAvatar: item.user.avatar,
-      }))
-    })
-
+      })),
+    });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -178,94 +177,125 @@ const byUser = async (req, res) => {
         name: item.user.name,
         username: item.user.username,
         userAvatar: item.user.avatar,
-      }))
-
-    })
-
-  } catch (err) {
-  res.status(500).send(err.message);
-}
-}
-
-const update = async (req, res) => {
-  try {
-      const { title, text , banner} = req.body;
-      const { id } = req.params;
-
-      if (!title && !text && !banner){
-        return res.status(400).send({message: "Submit a field"});
-      }
-
-      const news = await findByIdService(id);
-
-      if(news.user._id != req.userId){
-        return res.status(400).send({message: "You cant update"});
-
-      }
-
-      await updateService(id, title, text, banner);
-      return res.send({message: "Updated"});
-
+      })),
+    });
   } catch (err) {
     res.status(500).send(err.message);
   }
-}
+};
+
+const update = async (req, res) => {
+  try {
+    const { title, text, banner } = req.body;
+    const { id } = req.params;
+
+    if (!title && !text && !banner) {
+      return res.status(400).send({ message: "Submit a field" });
+    }
+
+    const news = await findByIdService(id);
+
+    if (news.user._id != req.userId) {
+      return res.status(400).send({ message: "You cant update" });
+    }
+
+    await updateService(id, title, text, banner);
+    return res.send({ message: "Updated" });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
 
 const erase = async (req, res) => {
-try {
-  const { id } = req.params
-  const news = await findByIdService(id);
+  try {
+    const { id } = req.params;
+    const news = await findByIdService(id);
 
-  if (String(news.user._id) !== req.userId){
-    return res.send({message: "You cant delete"})
+    if (String(news.user._id) !== req.userId) {
+      return res.send({ message: "You cant delete" });
+    }
+
+    await eraseService(id);
+    return res.send({ message: "Deleted" });
+  } catch (err) {
+    res.status(500).send(err.message);
   }
-
-  await eraseService(id);
-  return res.send({message: "Deleted"})
-} catch (err) {
-  res.status(500).send(err.message);
-}
-}
+};
 
 const likeNews = async (req, res) => {
   try {
-
-    const {id} = req.params;
+    const { id } = req.params;
     const userId = req.userId;
 
     const newsLiked = await likeNewsService(id, userId);
 
-    if(!newsLiked){
+    if (!newsLiked) {
       await deleteLikeNewsService(id, userId);
-      return res.status(200).send({message: "Like successfully removed"});
-
+      return res.status(200).send({ message: "Like successfully removed" });
     }
 
-    res.send({message: "You liked the news"});
-
-
+    res.send({ message: "You liked the news" });
   } catch (err) {
     res.status(500).send(err.message);
   }
-}
+};
 
 const addComment = async (req, res) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     const userId = req.userId;
-    const comment = req.body
+    const { comment } = req.body;
 
-    if(!comment){
-      return res.status(400).send({message: "Write a message"});
+    if (!comment) {
+      return res.status(400).send({ message: "Write a message" });
     }
 
     await addCommentService(id, comment, userId);
-    res.send({message: "Comment successfully completed"});
-
+    res.send({ message: "Comment successfully completed" });
+  } catch (err) {
+    res.status(500).send(err.message);
   }
- catch (err) {
-  res.status(500).send(err.message);
-}
-}
+};
 
-export { create, findAll, topNews, findById, searchByTitle, byUser, update, erase, likeNews, addComment };
+const deleteComment = async (req, res) => {
+  try {
+    const { idNews, idComment } = req.params;
+    const userId = req.userId;
+
+    const commentDeleted = await deleteCommentService(
+      idNews,
+      idComment,
+      userId
+    );
+
+    const commentFinder = commentDeleted.comments.find(
+      (comment) => comment.idComment === idComment
+    );
+
+    if (!commentFinder){
+      return res.status(400).send({message: "Cannot found"})
+    }
+
+    if (commentFinder.userId !== userId) {
+      return res.status(400).send({ message: "You cant delete this comment" });
+    }
+
+    res.send({ message: "Comment successfully deleted" });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+export {
+  create,
+  findAll,
+  topNews,
+  findById,
+  searchByTitle,
+  byUser,
+  update,
+  erase,
+  likeNews,
+  addComment,
+  deleteComment,
+};
