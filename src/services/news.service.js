@@ -1,4 +1,3 @@
-import { text } from "express";
 import News from "../models/News.js";
 
 const createService = (body) => News.create(body);
@@ -22,9 +21,35 @@ const searchByTitleService = (title) =>
 const byUserService = (id) =>
   News.find({ user: id }).sort({ _id: -1 }).populate("user");
 
-const updateService = (id, title, text, banner) => News.findOneAndUpdate({_id: id}, {title, text, banner}, {rawResult: true});
+const updateService = (id, title, text, banner) =>
+  News.findOneAndUpdate(
+    { _id: id },
+    { title, text, banner },
+    { rawResult: true }
+  );
 
-const eraseService = (id) => News.findOneAndDelete({_id: id});
+const eraseService = (id) => News.findOneAndDelete({ _id: id });
+
+const likeNewsService = (idNews, userId) =>
+  News.findOneAndUpdate(
+    { _id: idNews, "likes.userId": { $nin: [userId]  } },
+    { $push: { likes: { userId, created: new Date() } } }
+  );
+
+  const deleteLikeNewsService = (idNews, userId) =>
+  News.findOneAndUpdate(
+    { _id: idNews},
+    { $pull: { likes: { userId } } }
+  );
+
+  const addCommentService = (idNews, comment, userId) => {
+    const idComment = Math.floor(Date.now() * Math.random()).toString(36);
+
+    return News.findOneAndUpdate({_id: idNews} ,
+      {$push: {comments:{idComment,  comment, createdAt: new Date() } }}
+      );
+  }
+    
 
 export {
   createService,
@@ -35,5 +60,8 @@ export {
   searchByTitleService,
   byUserService,
   updateService,
-  eraseService
+  eraseService,
+  likeNewsService,
+  deleteLikeNewsService,
+  addCommentService
 };

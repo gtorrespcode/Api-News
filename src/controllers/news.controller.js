@@ -6,7 +6,11 @@ import {
   findByIdService,
   searchByTitleService,
   byUserService,
-  updateService
+  updateService,
+  eraseService,
+  likeNewsService,
+  deleteLikeNewsService,
+  addCommentService
 } from "../services/news.service.js";
 
 const create = async (req, res) => {
@@ -70,6 +74,7 @@ const findAll = async (req, res) => {
         title: item.title,
         text: item.text,
         banner: item.banner,
+        likes: item.likes,
         comments: item.comments,
         name: item.user.name,
         username: item.user.username,
@@ -222,4 +227,45 @@ try {
 }
 }
 
-export { create, findAll, topNews, findById, searchByTitle, byUser, update, erase };
+const likeNews = async (req, res) => {
+  try {
+
+    const {id} = req.params;
+    const userId = req.userId;
+
+    const newsLiked = await likeNewsService(id, userId);
+
+    if(!newsLiked){
+      await deleteLikeNewsService(id, userId);
+      return res.status(200).send({message: "Like successfully removed"});
+
+    }
+
+    res.send({message: "You liked the news"});
+
+
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+}
+
+const addComment = async (req, res) => {
+  try {
+    const {id} = req.params;
+    const userId = req.userId;
+    const comment = req.body
+
+    if(!comment){
+      return res.status(400).send({message: "Write a message"});
+    }
+
+    await addCommentService(id, comment, userId);
+    res.send({message: "Comment successfully completed"});
+
+  }
+ catch (err) {
+  res.status(500).send(err.message);
+}
+}
+
+export { create, findAll, topNews, findById, searchByTitle, byUser, update, erase, likeNews, addComment };
